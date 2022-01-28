@@ -51,11 +51,11 @@ namespace GameOfLife // *Conways Game of life
             else if (e.KeyChar == 'q') // Creates a glider
             {
                 Board = new bool[Board.GetLength(0), Board.GetLength(1)];
-                Board[3,0] = true;
-                Board[3,1] = true;
-                Board[3,2] = true;
-                Board[2,2] = true;
-                Board[1,1] = true;
+                Board[3, 0] = true;
+                Board[3, 1] = true;
+                Board[3, 2] = true;
+                Board[2, 2] = true;
+                Board[1, 1] = true;
             }
         }
 
@@ -65,7 +65,8 @@ namespace GameOfLife // *Conways Game of life
             int x = (int)((float)e.X / (float)_form.Width * (float)Board.GetLength(1));
             int y = (int)((float)e.Y / (float)_form.Height * (float)Board.GetLength(0));
 
-            Board[x, y] = true;
+            if (Board[x, y]) Board[x, y] = false;
+            else Board[x, y] = true;
 
             PrintBoard();
         }
@@ -107,7 +108,12 @@ namespace GameOfLife // *Conways Game of life
 
                         // _GUI.DrawLine(x1, y1, x2, y2, Color.Blue, (BlockRenderHeight / 10) + (BlockRenderWidth / 10));
                         // _GUI.DrawRectangle(x1, y1, x2, y2, Color.Blue);
+
+
+                        // if (!_Pause)
                         _GUI.FilledRectangle(x1, y1, x2, y2, Color.Blue);
+                        // else
+                        //     _GUI.FilledRectangle(x1, y1, x2, y2, Color.Red);
                     }
                 }
             }
