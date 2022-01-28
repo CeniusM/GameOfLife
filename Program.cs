@@ -26,7 +26,7 @@ static class Program
     }
     private static void StartGame(Form1 myForm)
     {
-        GameOfLife.Game game = new GameOfLife.Game(myForm);
+        game = new GameOfLife.Game(myForm, 40, 40);
         game.Start();
     }
 }
