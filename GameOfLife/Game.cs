@@ -65,6 +65,10 @@ namespace GameOfLife // *Conways Game of life
             int x = (int)((float)e.X / (float)_form.Width * (float)Board.GetLength(1));
             int y = (int)((float)e.Y / (float)_form.Height * (float)Board.GetLength(0));
 
+            //yea idk how to fix it
+            // int x = (int)((float)Board.GetLength(1) / (float)_form.Width * e.X);
+            // int y = (int)((float)Board.GetLength(0) / (float)_form.Height * e.Y);
+
             if (Board[x, y]) Board[x, y] = false;
             else Board[x, y] = true;
 
