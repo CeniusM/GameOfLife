@@ -12,12 +12,13 @@ namespace GameOfLife
 {
     class Game
     {
-        private static int Width = 250;
-        private static int Height = 250;
-        private static int PieceWidth = 4;
-        private static int PieceHeight = 4;
+        private static int Width = 400;
+        private static int Height = 400;
+        private static int PieceWidth = 2;
+        private static int PieceHeight = 2;
 
         private static bool[,] board;
+        private static bool[,] oldBoard;
         private static IntPtr window;
         private static IntPtr renderer;
         private static int Tick = 0;
@@ -28,6 +29,7 @@ namespace GameOfLife
         public static void Start()
         {
             board = new bool[Width, Height];
+            oldBoard = new bool[Width, Height];
 
             // Initilizes SDL.
             if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) < 0)
@@ -82,13 +84,11 @@ namespace GameOfLife
                 for (int y = 0; y < Height; y++)
                     board[x, y] = rnd.Next(0, 2) == 1 ? true : false;
 
-            uint[] arr = new uint[10];
-            int arrCount = 0;
             bool IsRunning = true;
-
             while (IsRunning)
             {
-                sw.Restart();
+               sw.Restart();
+
                 // Clear rendere
                 SDL.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 SDL.SDL_RenderClear(renderer);
@@ -109,14 +109,12 @@ namespace GameOfLife
                     }
                 }
 
-
-                Tick++;
                 // -- Game Render Code --
                 SDL.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-
                 while (generating) // to stop it from generating the frame from an unfinished board
                     SDL.SDL_Delay(1);
+
                 for (int x = 0; x < Width; x++)
                 {
                     for (int y = 0; y < Height; y++)
@@ -125,34 +123,19 @@ namespace GameOfLife
                         {
                             rect.x = x * PieceWidth;
                             rect.y = y * PieceHeight;
-                            //SDL.SDL_SetRenderDrawColor(renderer, (byte)rnd.Next(0, 255), (byte)rnd.Next(0, 255), (byte)rnd.Next(0, 255), 255);
-                            //// Draw a filled in rectangle.
-                            //SDL.SDL_RenderFillRect(renderer, ref rect);
 
                             SDL.SDL_RenderFillRect(renderer, ref rect);
                         }
                     }
                 }
 
-
                 // First starts a new thread to regenrate the board where after on this thread you disblay the image
                 Task.Run(NewGeneration);
                 SDL.SDL_RenderPresent(renderer);
 
-                uint time = (uint)sw.ElapsedMilliseconds; // FPS*
-                if (time < 20)
-                    SDL.SDL_Delay(20 - time); // 1000 / 60(fps) = 16,666 = ~17
-
-                arr[arrCount] = time;
-                arrCount++;
-                if (arrCount == 10)
-                    arrCount = 0;
-                long totalCount = 0;
-                if (Tick % 10 == 1)
-                {
-                    for (int i = 0; i < 10; i++) totalCount += arr[i];
-                    Console.WriteLine((totalCount / 10) + "ms");
-                }
+                if (sw.ElapsedMilliseconds < 17) // 1000 / 60(fps) = 16.666 = ~17
+                    SDL.SDL_Delay(17 - (uint)sw.ElapsedMilliseconds);
+                Console.WriteLine(sw.ElapsedMilliseconds);
             }
         }
 
@@ -168,6 +151,11 @@ namespace GameOfLife
         public static void NewGeneration() // needs some cleaning
         {
             generating = true;
+
+            int Lenght0 = board.GetLength(0);
+            int Lenght1 = board.GetLength(1);
+
+            // local func
             int GetAliveAmount(int x, int y)
             {
                 int Amout = 0;
@@ -178,7 +166,7 @@ namespace GameOfLife
                     {
                         if (i == 0 && j == 0) continue;
 
-                        if ((x + i) < board.GetLength(0) && (y + j) < board.GetLength(1) && (x + i) > -1 && (y + j) > -1)
+                        if ((x + i) < Lenght0 && (y + j) < Lenght1 && (x + i) > -1 && (y + j) > -1)
                             if (board[x + i, y + j])
                                 Amout++;
                     }
@@ -187,45 +175,37 @@ namespace GameOfLife
                 return Amout;
             }
 
-            bool[,] NewBoard = new bool[board.GetLength(0), board.GetLength(1)];
-
-            for (int i = 0; i < board.GetLength(0); i++)
+            for (int i = 0; i < Lenght0; i++)
             {
-                for (int j = 0; j < board.GetLength(1); j++)
+                for (int j = 0; j < Lenght1; j++)
                 {
                     int AliveAmout = GetAliveAmount(i, j);
-
+                    
+                    // alive
                     if (board[i, j])
                     {
                         if (2 > AliveAmout)
-                        {
-                            NewBoard[i, j] = false;
-                            continue;
-                        }
+                            oldBoard[i, j] = false;
+
                         else if (3 < AliveAmout)
-                        {
-                            NewBoard[i, j] = false;
-                            continue;
-                        }
+                            oldBoard[i, j] = false;
+
                         else
-                        {
-                            NewBoard[i, j] = true;
-                            continue;
-                        }
+                            oldBoard[i, j] = true;
                     }
+
+                    // dead
                     else
-                    {
                         if (AliveAmout == 3)
-                        {
-                            NewBoard[i, j] = true;
-                            continue;
-                        }
-                    }
+                        oldBoard[i, j] = true;
                 }
             }
 
-            board = NewBoard;
-            
+            // switch the refrences so we dont have to make a new board everytime
+            bool[,] tempRef = oldBoard;
+            oldBoard = board;
+            board = tempRef;
+
             generating = false;
         }
     }

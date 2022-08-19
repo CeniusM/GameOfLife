@@ -11,7 +11,7 @@ namespace GameOfLife.GUI
     {
 		public static IntPtr LoadImage(string file, IntPtr rendere)
 		{
-			IntPtr loadedImage = IntPtr.Zero;
+			IntPtr loadedImage;
 			IntPtr texture = IntPtr.Zero;
 			loadedImage = SDL.SDL_LoadBMP(file);
 
