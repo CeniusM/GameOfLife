@@ -18,7 +18,7 @@ namespace GameOfLife
         private static int PieceHeight = 2;
 
         private static bool[,] board;
-        private static bool[,] oldBoard;
+        private static bool[,] newBoard;
         private static IntPtr window;
         private static IntPtr renderer;
         private static int Tick = 0;
@@ -29,7 +29,7 @@ namespace GameOfLife
         public static void Start()
         {
             board = new bool[Width, Height];
-            oldBoard = new bool[Width, Height];
+            newBoard = new bool[Width, Height];
 
             // Initilizes SDL.
             if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) < 0)
@@ -135,7 +135,7 @@ namespace GameOfLife
 
                 if (sw.ElapsedMilliseconds < 17) // 1000 / 60(fps) = 16.666 = ~17
                     SDL.SDL_Delay(17 - (uint)sw.ElapsedMilliseconds);
-                Console.WriteLine(sw.ElapsedMilliseconds);
+                //Console.WriteLine(sw.ElapsedMilliseconds);
             }
         }
 
@@ -154,6 +154,8 @@ namespace GameOfLife
 
             int Lenght0 = board.GetLength(0);
             int Lenght1 = board.GetLength(1);
+
+            //newBoard = new bool[Width, Height];
 
             // local func
             int GetAliveAmount(int x, int y)
@@ -185,26 +187,33 @@ namespace GameOfLife
                     if (board[i, j])
                     {
                         if (2 > AliveAmout)
-                            oldBoard[i, j] = false;
+                            newBoard[i, j] = false;
 
                         else if (3 < AliveAmout)
-                            oldBoard[i, j] = false;
+                            newBoard[i, j] = false;
 
                         else
-                            oldBoard[i, j] = true;
+                            newBoard[i, j] = true;
                     }
 
                     // dead
                     else
                         if (AliveAmout == 3)
-                        oldBoard[i, j] = true;
+                        newBoard[i, j] = true;
                 }
             }
 
             // switch the refrences so we dont have to make a new board everytime
-            bool[,] tempRef = oldBoard;
-            oldBoard = board;
+            var tempRef = newBoard;
+            newBoard = board;
             board = tempRef;
+
+            // DONT REMOVE THIS (⊙_⊙;), dont know why it dosent work without
+            for (int i = 0; i < Lenght0; i++)
+                for (int j = 0; j < Lenght1; j++)
+                    newBoard[i,j] = false;
+
+            //board = newBoard;
 
             generating = false;
         }
