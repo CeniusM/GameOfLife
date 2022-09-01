@@ -8,12 +8,15 @@ using System.Diagnostics;
 using GameOfLife.GUI.SDL2;
 using GameOfLife.GUI;
 
+using AVG = Foo.AVGTime<double>;
+
 //using PTR = System.UIntPtr;
+//using aBoolean = System.Boolean;
 
 
 namespace GameOfLife
 {
-    class Game
+    unsafe class Game
     {
         private static int Width = 400;
         private static int Height = 400;
@@ -33,7 +36,7 @@ namespace GameOfLife
         {
             board = new bool[Width, Height];
             newBoard = new bool[Width, Height];
-            
+
             // Initilizes SDL.
             if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) < 0)
             {
@@ -81,7 +84,7 @@ namespace GameOfLife
             };
             Random rnd = new Random();
             Stopwatch sw = new Stopwatch();
-            Foo.AVGTime<double> avg = new Foo.AVGTime<double>(100);
+            AVG avg = new AVG(100);
 
             // random board
             for (int x = 0; x < Width; x++)
@@ -117,10 +120,13 @@ namespace GameOfLife
 
                 while (generating) // to stop it from generating the frame from an unfinished board
                     SDL.SDL_Delay(1);
-                if (randomize) 
+                if (randomize)
                     for (int x = 0; x < Width; x++)
-                        for (int y = 0; y < Height; y++)
-                            board[x, y] = rnd.Next(0, 2) == 1 ? true : false;
+                        fixed (bool* line = &board[x, 0])
+                        {
+                            for (int y = 0; y < Height; y++)
+                                line[y] = rnd.Next(0, 2) == 1 ? true : false;
+                        }
 
                 for (int x = 0; x < Width; x++)
                 {
@@ -188,28 +194,30 @@ namespace GameOfLife
 
             for (int i = 0; i < Lenght0; i++)
             {
-                //int* 
-                for (int j = 0; j < Lenght1; j++)
+                fixed (bool* line = &newBoard[i, 0])
                 {
-                    int AliveAmout = GetAliveAmount(i, j);
-
-                    // alive
-                    if (board[i, j])
+                    for (int j = 0; j < Lenght1; j++)
                     {
-                        if (2 > AliveAmout)
-                            newBoard[i, j] = false;
+                        int AliveAmout = GetAliveAmount(i, j);
 
-                        else if (3 < AliveAmout)
-                            newBoard[i, j] = false;
+                        // alive
+                        if (board[i, j])
+                        {
+                            if (2 > AliveAmout)
+                                line[j] = false;
 
+                            else if (3 < AliveAmout)
+                                line[j] = false;
+
+                            else
+                                line[j] = true;
+                        }
+
+                        // dead
                         else
-                            newBoard[i, j] = true;
+                            if (AliveAmout == 3)
+                            line[j] = true;
                     }
-
-                    // dead
-                    else
-                        if (AliveAmout == 3)
-                        newBoard[i, j] = true;
                 }
             }
 
