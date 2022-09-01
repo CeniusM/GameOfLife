@@ -8,6 +8,9 @@ using System.Diagnostics;
 using GameOfLife.GUI.SDL2;
 using GameOfLife.GUI;
 
+//using PTR = System.UIntPtr;
+
+
 namespace GameOfLife
 {
     class Game
@@ -30,7 +33,7 @@ namespace GameOfLife
         {
             board = new bool[Width, Height];
             newBoard = new bool[Width, Height];
-
+            
             // Initilizes SDL.
             if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO) < 0)
             {
@@ -94,7 +97,7 @@ namespace GameOfLife
                 SDL.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 SDL.SDL_RenderClear(renderer);
 
-                bool allredyRandomized = false;
+                bool randomize = false;
                 // Check to see if there are any events and continue to do so until the queue is empty.
                 while (SDL.SDL_PollEvent(out SDL.SDL_Event e) == 1)
                 {
@@ -104,12 +107,7 @@ namespace GameOfLife
                             IsRunning = false;
                             break;
                         case SDL.SDL_EventType.SDL_KEYDOWN:
-                            if (allredyRandomized)
-                                break;
-                            allredyRandomized = true;
-                            for (int x = 0; x < Width; x++)
-                                for (int y = 0; y < Height; y++)
-                                    board[x, y] = rnd.Next(0, 2) == 1 ? true : false;
+                            randomize = true;
                             break;
                     }
                 }
@@ -119,6 +117,10 @@ namespace GameOfLife
 
                 while (generating) // to stop it from generating the frame from an unfinished board
                     SDL.SDL_Delay(1);
+                if (randomize) 
+                    for (int x = 0; x < Width; x++)
+                        for (int y = 0; y < Height; y++)
+                            board[x, y] = rnd.Next(0, 2) == 1 ? true : false;
 
                 for (int x = 0; x < Width; x++)
                 {
