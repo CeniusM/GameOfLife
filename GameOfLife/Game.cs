@@ -78,6 +78,7 @@ namespace GameOfLife
             };
             Random rnd = new Random();
             Stopwatch sw = new Stopwatch();
+            Foo.AVGTime<double> avg = new Foo.AVGTime<double>(100);
 
             // random board
             for (int x = 0; x < Width; x++)
@@ -87,12 +88,13 @@ namespace GameOfLife
             bool IsRunning = true;
             while (IsRunning)
             {
-               sw.Restart();
+                sw.Restart();
 
                 // Clear rendere
                 SDL.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 SDL.SDL_RenderClear(renderer);
 
+                bool allredyRandomized = false;
                 // Check to see if there are any events and continue to do so until the queue is empty.
                 while (SDL.SDL_PollEvent(out SDL.SDL_Event e) == 1)
                 {
@@ -102,6 +104,9 @@ namespace GameOfLife
                             IsRunning = false;
                             break;
                         case SDL.SDL_EventType.SDL_KEYDOWN:
+                            if (allredyRandomized)
+                                break;
+                            allredyRandomized = true;
                             for (int x = 0; x < Width; x++)
                                 for (int y = 0; y < Height; y++)
                                     board[x, y] = rnd.Next(0, 2) == 1 ? true : false;
@@ -132,10 +137,14 @@ namespace GameOfLife
                 // First starts a new thread to regenrate the board where after on this thread you disblay the image
                 Task.Run(NewGeneration);
                 SDL.SDL_RenderPresent(renderer);
-
-                if (sw.ElapsedMilliseconds < 17) // 1000 / 60(fps) = 16.666 = ~17
-                    SDL.SDL_Delay(17 - (uint)sw.ElapsedMilliseconds);
-                //Console.WriteLine(sw.ElapsedMilliseconds);
+                double time = sw.Elapsed.TotalMilliseconds;
+                if (time < 17) // 1000 / 60(fps) = 16.666 = ~17
+                    SDL.SDL_Delay(17 - (uint)time);
+                avg.Push(time);
+                if (avg.IsReady())
+                    if (Tick % 100 == 1)
+                        Console.WriteLine((uint)avg.GetAVG() + "ms");
+                Tick++;
             }
         }
 
@@ -154,8 +163,6 @@ namespace GameOfLife
 
             int Lenght0 = board.GetLength(0);
             int Lenght1 = board.GetLength(1);
-
-            //newBoard = new bool[Width, Height];
 
             // local func
             int GetAliveAmount(int x, int y)
@@ -179,10 +186,11 @@ namespace GameOfLife
 
             for (int i = 0; i < Lenght0; i++)
             {
+                //int* 
                 for (int j = 0; j < Lenght1; j++)
                 {
                     int AliveAmout = GetAliveAmount(i, j);
-                    
+
                     // alive
                     if (board[i, j])
                     {
@@ -211,7 +219,7 @@ namespace GameOfLife
             // DONT REMOVE THIS (⊙_⊙;), dont know why it dosent work without
             for (int i = 0; i < Lenght0; i++)
                 for (int j = 0; j < Lenght1; j++)
-                    newBoard[i,j] = false;
+                    newBoard[i, j] = false;
 
             //board = newBoard;
 
